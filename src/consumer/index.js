@@ -4,21 +4,22 @@
  *@date: 2021-11-06 17:30:44
  *@version: V1.0.5
 */
-const request = require('../worker.js')
-const colors = require('colors-console')
+const config = require('../config.js')
+const onceRequest = require('../worker.js')
+const print = require('../utils/console.js')
 const redis = require('redis')
 const EventEmitter = require('events')
 const bluebird = require('bluebird')
-const client = redis.createClient('6379', '127.0.0.1')
+const client = redis.createClient(config.redisPort, config.redisHost)
 bluebird.promisifyAll(redis.RedisClient.prototype)
 bluebird.promisifyAll(redis.Multi.prototype)
 
 client.on('error', function (err) {
-  console.log(colors(['red', 'underline'], err))
+  print.error(err)
   process.exit()
 })
 client.on('ready', function () {
-  console.log('ready')
+  print.success('ready')
   consumer.emit('begin')
 })
 class Consumer extends EventEmitter {
@@ -34,11 +35,11 @@ consumer.on('begin', async function () {
   while (true) {
     const value = await client.rpopAsync('biliId')
     // 调用封装好的request方法
-    const result = await Promise.race([request(value), timeout(5000)])
+    const result = await Promise.race([onceRequest(value), timeout(5000)])
 
     // 提供的默认持久化方法
     if (result) {
-      console.log(result)
+      print.success(result)
       // persist(JSON.stringify(result))
     }
 
@@ -49,7 +50,7 @@ consumer.on('begin', async function () {
 })
 
 consumer.on('pause', function () {
-  console.log('Consumer will pause')
+  print.warn('Consumer will pause')
   this.status = 'pause'
 })
 
@@ -67,12 +68,12 @@ function timeout (ms) {
 }
 
 async function getListLength () {
-  console.log('Cousumer status ', consumer.status)
+  print.success('Cousumer status ', consumer.status)
   // 获取缓冲区大小
   const length = await client.llenAsync('mqTest')
 
   if (length === 0 && consumer.status === 'begin') {
-    console.log('consumer will pause')
+    print.warn('consumer will pause')
     consumer.emit('pause')
   } else if (consumer.status === 'pause' && length > 1000) {
     // 设置当缓冲区大于1000时才启动消费者，避免在临界值附近反复切换状态

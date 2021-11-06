@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node ./src/index.js",
     "producer": "node ./src/producer/index.js",
-    "consumer": "node ./src/consumer/index.js"
+    "consumer": "node ./src/consumer/index.js",
+    "start":"node ./src/index.js"
   },
   "repository": {
     "type": "git",

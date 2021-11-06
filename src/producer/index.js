@@ -4,23 +4,24 @@
  *@date: 2021-11-06 16:31:23
  *@version: V1.0.5
 */
+const print = require('../utils/console.js')
+const config = require('../config.js')
 const EventEmitter = require('events')
 const redis = require('redis')
-const config = require('../config.js')
 const bluebird = require('bluebird')
 let startID = config.startID
-const client = redis.createClient('6379', '127.0.0.1')
+const client = redis.createClient(config.redisPort, config.redisHost)
 bluebird.promisifyAll(redis.RedisClient.prototype)
 bluebird.promisifyAll(redis.Multi.prototype)
 
 client.on('error', function (error) {
-  console.log('Producer redis client error ', error)
+  print.error(error)
   process.exit()
 })
 
 client.on('ready', async function () {
   const currentID = await client.lpopAsync('biliId')
-  console.log('id->', currentID)
+  print.success(currentID)
   if (currentID) {
     startID = currentID
   }
@@ -55,14 +56,14 @@ producer.on('begin', async function () {
 
 producer.on('pause', function () {
   if (this.status === 'begin') {
-    console.log('Producer will pause')
+    print.warn('Producer will pause')
     this.status = 'pause'
   }
 })
 
 producer.on('resume', function () {
   if (this.status === 'pause') {
-    console.log('producer ready to resume')
+    print.warn('producer ready to resume')
     this.emit('begin')
   }
 })
@@ -77,11 +78,11 @@ setInterval(async function () {
   const length = await getListLength()
 
   if (length > 1000 && producer.status === 'begin') {
-    console.log('producer will pause')
+    print.warn('producer will pause')
     producer.emit('pause')
   }
 
   if (length < 1000 && producer.status === 'pause') {
     producer.emit('resume')
   }
-}, 5)// 每隔100ms检查一次
+}, 100)// 每隔100ms检查一次
