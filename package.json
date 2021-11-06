@@ -4,7 +4,9 @@
   "description": "A spider program",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./src/index.js",
+    "producer": "node ./src/producer/index.js",
+    "consumer": "node ./src/consumer/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,11 +22,18 @@
   },
   "homepage": "https://github.com/codeWen666/Spider#readme",
   "devDependencies": {
+    "colors-console": "^1.0.3",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.1"
+  },
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "cheerio": "^1.0.0-rc.10",
+    "redis": "^3.1.2",
+    "request": "^2.88.2"
   }
 }
